@@ -1,0 +1,16 @@
+[
+{
+  "modid": "yukiclient",
+  "name": "YukiClient",
+  "description": "A clean Japanese snow-themed PvP client for Minecraft 1.8.9",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["staFF6773"],
+  "credits": "",
+  "logoFile": "assets/yukiclient/yuki.png",
+  "screenshots": [],
+  "dependencies": []
+}
+]
