@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="/home/notstaff/YukiClient/src/main/resources/assets/yukiclient/yuki.png" width="120" alt="CubicLauncher" />
+  <img src="https://github.com/staFF6773/YukiClient/blob/main/src/main/resources/assets/yukiclient/yuki.png?raw=true" width="120" alt="YukiCLient" />
   <h1>YukiClient</h1>
 
 A clean PvP client for **Minecraft 1.8.9**.
