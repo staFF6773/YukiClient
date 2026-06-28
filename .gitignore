@@ -5,6 +5,9 @@ out/
 !gradle/wrapper/gradle-wrapper.jar
 !gradle/wrapper/gradle-wrapper.properties
 
+# === Maven ===
+target/
+
 # Local Gradle distribution (if bundled manually)
 gradle-2.9-bin.zip
 gradle-2.9/

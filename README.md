@@ -22,6 +22,12 @@ Built on top of Forge, YukiClient adds lightweight HUD modules and PvP behavior 
 - **Zoom** — Hold `C` to smoothly zoom in with reduced mouse sensitivity.
 - **FullBright** — Removes darkness without requiring torches or potions.
 
+### Client Badges
+- **Client Badges** — Shows the YukiClient snowflake logo on players using the client: before the name in the tab list and beside the name in the nametag. The nametag badge is always visible in third person.
+  - Your own badge is shown on any server or single-player world.
+  - To see badges of **other** YukiClient players, the server must also run the YukiClient mod (for example, a LAN world or a dedicated Forge server with the mod in its `mods/` folder).
+  - Can be toggled on/off in the ClickGUI.
+
 ### In-Game HUD Editor
 Press `Right Shift` in-game to open the draggable HUD editor. Move and resize modules however you like — your layout is saved automatically.
 
