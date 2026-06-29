@@ -1,14 +1,14 @@
 package com.yukiclient.modules.hud;
 
 import com.yukiclient.modules.Module;
+import com.yukiclient.theme.YukiTheme;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import com.yukiclient.util.ClickTracker;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
-
-import java.util.ArrayDeque;
 
 /**
  * Keystrokes Module - LunarClient Style.
@@ -31,18 +31,9 @@ public class KeystrokesModule extends Module {
     private final int gap = 2;
     private final int totalRowWidth = 3 * keySize + 2 * gap;
 
-    // LunarClient-inspired palette
-    private static final int BORDER_COLOR = 0xFFFFFFFF;
-    private static final int UNPRESSED_BG = 0xFF222222;
-    private static final int PRESSED_BG = 0xFF00BFFF; // bright cyan
-    private static final int UNPRESSED_TEXT = 0xFFFFFFFF;
-    private static final int PRESSED_TEXT = 0xFF111111;
-
     // CPS tracking
-    private final ArrayDeque<Long> leftClicks = new ArrayDeque<Long>();
-    private final ArrayDeque<Long> rightClicks = new ArrayDeque<Long>();
-    private boolean wasLeftDown = false;
-    private boolean wasRightDown = false;
+    private final ClickTracker leftTracker = new ClickTracker();
+    private final ClickTracker rightTracker = new ClickTracker();
 
     // Cached per-tick key/button states
     private boolean forward, left, back, right, jump, lmb, rmb;
@@ -96,29 +87,11 @@ public class KeystrokesModule extends Module {
      * Updates rolling 1-second CPS counters for left and right clicks.
      */
     private void updateCps() {
-        long now = System.currentTimeMillis();
+        leftTracker.update(Mouse.isButtonDown(0));
+        rightTracker.update(Mouse.isButtonDown(1));
 
-        boolean leftDown = Mouse.isButtonDown(0);
-        if (leftDown && !wasLeftDown) {
-            leftClicks.addLast(now);
-        }
-        wasLeftDown = leftDown;
-
-        boolean rightDown = Mouse.isButtonDown(1);
-        if (rightDown && !wasRightDown) {
-            rightClicks.addLast(now);
-        }
-        wasRightDown = rightDown;
-
-        while (!leftClicks.isEmpty() && now - leftClicks.peekFirst() > 1000) {
-            leftClicks.pollFirst();
-        }
-        while (!rightClicks.isEmpty() && now - rightClicks.peekFirst() > 1000) {
-            rightClicks.pollFirst();
-        }
-
-        leftCps = leftClicks.size();
-        rightCps = rightClicks.size();
+        leftCps = leftTracker.getCps();
+        rightCps = rightTracker.getCps();
     }
 
     @Override
@@ -147,14 +120,13 @@ public class KeystrokesModule extends Module {
     }
 
     /**
-     * Draws a standard key box with a 1px white border.
+     * Draws a frosted key cell. Idle keys show frost-blue text; pressed keys get
+     * a warm sakura-tinted cell and snow-white text so they pop.
      */
     private void drawKey(String label, int x, int y, boolean pressed, int w, int h) {
-        int bg = pressed ? PRESSED_BG : UNPRESSED_BG;
-        int textCol = pressed ? PRESSED_TEXT : UNPRESSED_TEXT;
+        YukiTheme.drawFrostKey(x, y, w, h, pressed);
 
-        drawBorderedRect(x, y, w, h, BORDER_COLOR, bg);
-
+        int textCol = pressed ? YukiTheme.SNOW_WHITE : YukiTheme.FROST_BLUE;
         int tw = mc.fontRendererObj.getStringWidth(label);
         int tx = x + (w - tw) / 2;
         int ty = y + (h - 8) / 2;
@@ -165,10 +137,9 @@ public class KeystrokesModule extends Module {
      * Draws a mouse key box that also renders a CPS counter underneath the label.
      */
     private void drawMouseKey(String label, String cpsText, int x, int y, boolean pressed, int w, int h) {
-        int bg = pressed ? PRESSED_BG : UNPRESSED_BG;
-        int textCol = pressed ? PRESSED_TEXT : UNPRESSED_TEXT;
+        YukiTheme.drawFrostKey(x, y, w, h, pressed);
 
-        drawBorderedRect(x, y, w, h, BORDER_COLOR, bg);
+        int textCol = pressed ? YukiTheme.SNOW_WHITE : YukiTheme.FROST_BLUE;
 
         // Label (shifted up slightly to make room for CPS)
         int labelW = mc.fontRendererObj.getStringWidth(label);
@@ -176,20 +147,10 @@ public class KeystrokesModule extends Module {
         int labelY = y + (h - 16) / 2;
         mc.fontRendererObj.drawString(label, labelX, labelY, textCol, false);
 
-        // CPS count
+        // CPS count, kept in frost-blue as a quiet secondary readout.
         int cpsW = mc.fontRendererObj.getStringWidth(cpsText);
         int cpsX = x + (w - cpsW) / 2;
         int cpsY = labelY + 8;
-        mc.fontRendererObj.drawString(cpsText, cpsX, cpsY, textCol, false);
-    }
-
-    /**
-     * Draws a rectangle with a 1px outer border and filled interior.
-     */
-    private void drawBorderedRect(int x, int y, int w, int h, int borderColor, int fillColor) {
-        // Full border rect
-        Gui.drawRect(x, y, x + w, y + h, borderColor);
-        // Inner fill (inset by 1px)
-        Gui.drawRect(x + 1, y + 1, x + w - 1, y + h - 1, fillColor);
+        mc.fontRendererObj.drawString(cpsText, cpsX, cpsY, pressed ? YukiTheme.SNOW_WHITE : YukiTheme.FROST_BLUE, false);
     }
 }

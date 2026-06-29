@@ -67,7 +67,9 @@ public class ConfigManager {
                     module.setScale(config.getScale());
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
+            // Covers IO errors as well as malformed JSON (JsonSyntaxException),
+            // so a corrupted config file can never crash the game on startup.
             System.err.println("Failed to load YukiClient config from " + configFile.getAbsolutePath());
             e.printStackTrace();
         }

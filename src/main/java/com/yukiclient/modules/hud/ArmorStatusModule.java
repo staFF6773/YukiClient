@@ -59,8 +59,17 @@ public class ArmorStatusModule extends Module {
             updateSnapshot(armorInventory);
         }
 
-        // --- Draw panel background + border ---
-        YukiTheme.drawLunarBox(this.x, this.y, cachedPanelWidth, cachedPanelHeight);
+        // No armor equipped: render nothing so we don't show an empty floating
+        // panel. Dimensions are kept so the HUD editor can still position it.
+        boolean anyVisible = cachedVisible[0] || cachedVisible[1] || cachedVisible[2] || cachedVisible[3];
+        if (!anyVisible) {
+            this.width = cachedPanelWidth;
+            this.height = cachedPanelHeight;
+            return;
+        }
+
+        // --- Draw frosted Japanese-snow panel ---
+        YukiTheme.drawFrostPanel(this.x, this.y, cachedPanelWidth, cachedPanelHeight);
 
         // --- Draw armor items ---
         int iconX = this.x + pad;

@@ -5,9 +5,8 @@ import com.yukiclient.theme.YukiTheme;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import com.yukiclient.util.ClickTracker;
 import org.lwjgl.input.Mouse;
-
-import java.util.ArrayDeque;
 
 /**
  * CPS (Clicks Per Second) Module - LunarClient Style.
@@ -28,10 +27,8 @@ public class CpsModule extends Module {
     private final int gap = 2;
 
     // CPS tracking
-    private final ArrayDeque<Long> leftClicks = new ArrayDeque<Long>();
-    private final ArrayDeque<Long> rightClicks = new ArrayDeque<Long>();
-    private boolean wasLeftDown = false;
-    private boolean wasRightDown = false;
+    private final ClickTracker leftTracker = new ClickTracker();
+    private final ClickTracker rightTracker = new ClickTracker();
 
     // Cached per-tick state used during rendering
     private boolean leftDown;
@@ -64,30 +61,14 @@ public class CpsModule extends Module {
             return;
         }
 
-        long now = System.currentTimeMillis();
-
         leftDown = Mouse.isButtonDown(0);
-        if (leftDown && !wasLeftDown) {
-            leftClicks.addLast(now);
-        }
-        wasLeftDown = leftDown;
-
         rightDown = Mouse.isButtonDown(1);
-        if (rightDown && !wasRightDown) {
-            rightClicks.addLast(now);
-        }
-        wasRightDown = rightDown;
 
-        // Remove clicks older than one second. ArrayDeque#pollFirst is O(1).
-        while (!leftClicks.isEmpty() && now - leftClicks.peekFirst() > 1000) {
-            leftClicks.pollFirst();
-        }
-        while (!rightClicks.isEmpty() && now - rightClicks.peekFirst() > 1000) {
-            rightClicks.pollFirst();
-        }
+        leftTracker.update(leftDown);
+        rightTracker.update(rightDown);
 
-        leftCps = leftClicks.size();
-        rightCps = rightClicks.size();
+        leftCps = leftTracker.getCps();
+        rightCps = rightTracker.getCps();
 
         // Refresh cached strings only when values change.
         if (leftCps != lastLeftCps) {
@@ -103,12 +84,12 @@ public class CpsModule extends Module {
     @Override
     public void render() {
         // --- Left Box ---
-        YukiTheme.drawLunarBox(this.x, this.y, boxWidth, boxHeight, leftDown);
+        YukiTheme.drawFrostPanel(this.x, this.y, boxWidth, boxHeight, leftDown);
         drawCpsText("LMB", leftCpsText, this.x, this.y, boxWidth, boxHeight, leftDown);
 
         // --- Right Box ---
         int rightX = this.x + boxWidth + gap;
-        YukiTheme.drawLunarBox(rightX, this.y, boxWidth, boxHeight, rightDown);
+        YukiTheme.drawFrostPanel(rightX, this.y, boxWidth, boxHeight, rightDown);
         drawCpsText("RMB", rightCpsText, rightX, this.y, boxWidth, boxHeight, rightDown);
 
         // Update dimensions for the GUI editor
@@ -120,16 +101,18 @@ public class CpsModule extends Module {
      * Draws the label and CPS value inside a box, centered as a two-line block.
      */
     private void drawCpsText(String label, String cpsText, int x, int y, int w, int h, boolean pressed) {
-        int textColor = pressed ? YukiTheme.LUNAR_DARK_TEXT : YukiTheme.SNOW_WHITE;
+        // Label dims to frost-blue when idle and lights up snow-white when pressed.
+        int labelColor = pressed ? YukiTheme.SNOW_WHITE : YukiTheme.FROST_BLUE;
+        int valueColor = YukiTheme.SNOW_WHITE;
 
         int labelWidth = mc.fontRendererObj.getStringWidth(label);
-        int labelX = x + (w - labelWidth) / 2;
+        int labelX = x + 2 + (w - 2 - labelWidth) / 2;
         int labelY = y + (h - 16) / 2;
-        mc.fontRendererObj.drawString(label, labelX, labelY, textColor, false);
+        mc.fontRendererObj.drawString(label, labelX, labelY, labelColor, false);
 
         int valueWidth = mc.fontRendererObj.getStringWidth(cpsText);
-        int valueX = x + (w - valueWidth) / 2;
+        int valueX = x + 2 + (w - 2 - valueWidth) / 2;
         int valueY = labelY + 8;
-        mc.fontRendererObj.drawString(cpsText, valueX, valueY, textColor, false);
+        mc.fontRendererObj.drawString(cpsText, valueX, valueY, valueColor, false);
     }
 }

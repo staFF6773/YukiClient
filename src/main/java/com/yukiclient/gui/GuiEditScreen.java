@@ -10,6 +10,7 @@ import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Draggable HUD Editor Screen - LunarClient-inspired UX.
@@ -96,7 +97,7 @@ public class GuiEditScreen extends GuiScreen {
         }
 
         // Single pass: compute bounds, find hovered module / handle, draw borders & handles.
-        ArrayList<Module> modules = moduleManager.getModulesView();
+        List<Module> modules = getHudModules();
         int n = modules.size();
 
         hoveredModule = null;
@@ -194,7 +195,7 @@ public class GuiEditScreen extends GuiScreen {
         }
     }
 
-    private void drawAlignmentGuides(Module target, ArrayList<Module> modules) {
+    private void drawAlignmentGuides(Module target, List<Module> modules) {
         int tx = target.getX();
         int ty = target.getY();
         int tw = target.getScaledWidth();
@@ -450,7 +451,7 @@ public class GuiEditScreen extends GuiScreen {
     }
 
     private Module getModuleWithHandleAt(int mouseX, int mouseY) {
-        ArrayList<Module> mods = moduleManager.getModulesView();
+        List<Module> mods = getHudModules();
         for (int i = mods.size() - 1; i >= 0; i--) {
             Module mod = mods.get(i);
             if (!mod.isEnabled()) continue;
@@ -461,12 +462,23 @@ public class GuiEditScreen extends GuiScreen {
         return null;
     }
 
+    private List<Module> getHudModules() {
+        ArrayList<Module> all = moduleManager.getModulesView();
+        ArrayList<Module> hud = new ArrayList<>();
+        for (Module mod : all) {
+            if (mod.getCategory() == Module.Category.HUD) {
+                hud.add(mod);
+            }
+        }
+        return hud;
+    }
+
     /**
-     * Returns the topmost enabled module at the given coordinates. Bounds already
+     * Returns the topmost enabled HUD module at the given coordinates. Bounds already
      * account for each module's effective scale.
      */
     private Module getModuleAt(int mouseX, int mouseY) {
-        ArrayList<Module> mods = moduleManager.getModulesView();
+        List<Module> mods = getHudModules();
         for (int i = mods.size() - 1; i >= 0; i--) {
             Module mod = mods.get(i);
             if (mod.isEnabled() && mod.isMouseInside(mouseX, mouseY)) {

@@ -39,13 +39,13 @@ public class FpsModule extends Module {
         int boxWidth = textWidth + paddingX * 2;
         int boxHeight = 8 + paddingY * 2; // font height ~8
 
-        // Draw LunarClient-style dark box with white border
-        YukiTheme.drawLunarBox(this.x, this.y, boxWidth, boxHeight);
+        // Draw frosted Japanese-snow panel
+        YukiTheme.drawFrostPanel(this.x, this.y, boxWidth, boxHeight);
 
-        // Center text inside the box
-        int textX = this.x + (boxWidth - textWidth) / 2;
+        // Center text within the area past the left accent bar.
+        int textX = this.x + 2 + (boxWidth - 2 - textWidth) / 2;
         int textY = this.y + paddingY;
-        mc.fontRendererObj.drawString(fpsText, textX, textY, YukiTheme.SNOW_WHITE, false);
+        YukiTheme.drawStringWithFrostShadow(fpsText, textX, textY, YukiTheme.SNOW_WHITE);
 
         // Update dimensions for the GUI editor
         this.width = boxWidth;

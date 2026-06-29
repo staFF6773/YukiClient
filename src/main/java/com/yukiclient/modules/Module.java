@@ -17,6 +17,11 @@ public abstract class Module {
     /** Coarse step used with Shift + scroll. */
     public static final float COARSE_STEP = 0.1f;
 
+    /** Minimum global HUD scale multiplier. */
+    public static final float MIN_GLOBAL_SCALE = 0.25f;
+    /** Maximum global HUD scale multiplier. */
+    public static final float MAX_GLOBAL_SCALE = 3.0f;
+
     /** Global multiplier applied to every HUD module. */
     private static float globalScale = 1.0f;
 
@@ -130,7 +135,7 @@ public abstract class Module {
      * Sets the global HUD scale multiplier. Values are clamped to a safe range.
      */
     public static void setGlobalScale(float scale) {
-        globalScale = Math.max(0.25f, Math.min(3.0f, scale));
+        globalScale = Math.max(MIN_GLOBAL_SCALE, Math.min(MAX_GLOBAL_SCALE, scale));
     }
 
     /**

@@ -18,7 +18,8 @@ import java.util.List;
  *
  * Modern, minimalist "Frost" layout:
  * - A single centered card on a dimmed background.
- * - Modules grouped under category headers (HUD / MODULES).
+ * - A two-column layout: HUD modules on the left, behavior MODULES on the
+ *   right, so the panel stays compact as the module list grows.
  * - Borderless rows that use background tints and a sakura-pink accent bar
  *   for enabled state instead of heavy outlines.
  * - A footer line that shows the hovered module's description.
@@ -28,8 +29,9 @@ public class ClickGuiScreen extends GuiScreen {
     private final ConfigManager configManager;
 
     /* === Layout constants === */
-    private static final int PANEL_WIDTH = 240;
+    private static final int PANEL_WIDTH = 300;
     private static final int PADDING = 14;
+    private static final int COLUMN_GAP = 12;
     private static final int ROW_HEIGHT = 22;
     private static final int TITLE_BLOCK = 28;
     private static final int ACCENT = 1;
@@ -43,6 +45,9 @@ public class ClickGuiScreen extends GuiScreen {
     private int panelHeight;
     private int panelX;
     private int panelY;
+    private int columnWidth;
+    private int leftColX;
+    private int rightColX;
 
     private List<Module> hudModules;
     private List<Module> behaviorModules;
@@ -73,6 +78,10 @@ public class ClickGuiScreen extends GuiScreen {
         this.behaviorModules = behavior;
 
         panelX = (this.width - PANEL_WIDTH) / 2;
+        columnWidth = (PANEL_WIDTH - PADDING * 2 - COLUMN_GAP) / 2;
+        leftColX = panelX + PADDING;
+        rightColX = leftColX + columnWidth + COLUMN_GAP;
+
         // Dry-run layout (baseY = 0) to measure total height.
         panelHeight = runLayout(0, false);
         panelY = (this.height - panelHeight) / 2;
@@ -84,12 +93,10 @@ public class ClickGuiScreen extends GuiScreen {
     }
 
     /**
-     * Computes the vertical layout of the panel. When {@code populate} is true,
-     * the rows, headers and footer coordinates are written to this screen's
-     * fields. Returns the total panel height measured from {@code baseY}.
-     *
-     * <p>Running the same code with {@code populate = false} (baseY = 0)
-     * guarantees the measured height always matches the populated layout.</p>
+     * Computes the vertical layout of the panel across two columns. When
+     * {@code populate} is true, the rows, headers and footer coordinates are
+     * written to this screen's fields. Returns the total panel height measured
+     * from {@code baseY}.
      */
     private int runLayout(int baseY, boolean populate) {
         if (populate) {
@@ -97,33 +104,37 @@ public class ClickGuiScreen extends GuiScreen {
             headers.clear();
         }
 
-        int y = baseY + TITLE_BLOCK; // title block (text + spacing)
-        y += ACCENT;                 // frost accent line sits at TITLE_BLOCK
-        y += SECTION_GAP;
+        int top = baseY + TITLE_BLOCK + ACCENT + SECTION_GAP;
+
+        // Left column: HUD modules.
+        int ly = top;
         if (populate) {
-            headers.add(new Header("HUD", y));
+            headers.add(new Header("HUD", leftColX, ly));
         }
-        y += HEADER_BLOCK;
+        ly += HEADER_BLOCK;
         for (Module mod : hudModules) {
             if (populate) {
-                rows.add(new Row(mod, panelX + PADDING, y, PANEL_WIDTH - PADDING * 2, ROW_HEIGHT));
+                rows.add(new Row(mod, leftColX, ly, columnWidth, ROW_HEIGHT));
             }
-            y += ROW_HEIGHT;
+            ly += ROW_HEIGHT;
         }
 
-        y += SECTION_GAP;
+        // Right column: behavior modules.
+        int ry = top;
         if (populate) {
-            headers.add(new Header("MODULES", y));
+            headers.add(new Header("MODULES", rightColX, ry));
         }
-        y += HEADER_BLOCK;
+        ry += HEADER_BLOCK;
         for (Module mod : behaviorModules) {
             if (populate) {
-                rows.add(new Row(mod, panelX + PADDING, y, PANEL_WIDTH - PADDING * 2, ROW_HEIGHT));
+                rows.add(new Row(mod, rightColX, ry, columnWidth, ROW_HEIGHT));
             }
-            y += ROW_HEIGHT;
+            ry += ROW_HEIGHT;
         }
 
-        y += FOOTER_GAP;
+        int contentBottom = Math.max(ly, ry);
+
+        int y = contentBottom + FOOTER_GAP;
         if (populate) {
             this.footerDividerY = y;
         }
@@ -140,8 +151,8 @@ public class ClickGuiScreen extends GuiScreen {
         // Dim the world behind the GUI.
         GuiScreen.drawRect(0, 0, this.width, this.height, YukiTheme.DARK_OVERLAY);
 
-        // Panel card.
-        GuiScreen.drawRect(panelX, panelY, panelX + PANEL_WIDTH, panelY + panelHeight, YukiTheme.PANEL_BG);
+        // Panel card: rounded with a soft vertical gradient (matches HUD panels).
+        YukiTheme.drawPanelCard(panelX, panelY, PANEL_WIDTH, panelHeight);
 
         // Title: "Yuki" in snow white, "ClickGUI" in frost blue, centered as one block.
         String titleMain = "Yuki";
@@ -167,9 +178,14 @@ public class ClickGuiScreen extends GuiScreen {
             }
         }
 
+        // Subtle vertical divider between the two columns.
+        int dividerX = (leftColX + columnWidth + rightColX) / 2;
+        GuiScreen.drawRect(dividerX, headers.isEmpty() ? panelY : accentY + SECTION_GAP,
+                dividerX + 1, footerDividerY - FOOTER_GAP, YukiTheme.DIVIDER);
+
         // Category headers.
         for (Header header : headers) {
-            this.fontRendererObj.drawString(header.label, panelX + PADDING, header.textY, YukiTheme.FROST_BLUE, false);
+            this.fontRendererObj.drawString(header.label, header.x, header.textY, YukiTheme.FROST_BLUE, false);
         }
 
         // Module rows.
@@ -265,10 +281,12 @@ public class ClickGuiScreen extends GuiScreen {
 
     private static class Header {
         final String label;
+        final int x;
         final int textY;
 
-        Header(String label, int textY) {
+        Header(String label, int x, int textY) {
             this.label = label;
+            this.x = x;
             this.textY = textY;
         }
     }
